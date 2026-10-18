@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>온유 성장일기</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FBF7F2">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF7F2; --card:#FFFFFF; --ink:#3A3330; --sub:#8C817A; --line:#EDE4DA;
+  --accent:#E07A5F; --accent-d:#C8634A; --soft:#F6EFE6;
+  --c-gross:#E9A23B; --c-social:#E26D8C; --c-lang:#4F8FD6; --c-fine:#4FA77A; --c-life:#9A79D0;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;font-size:15px}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink)}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px 120px}
+
+/* 헤더 */
+.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 16px 8px;max-width:640px;margin:0 auto}
+.top-row{display:flex;align-items:center;justify-content:space-between}
+.baby-name{font-family:'Gowun Dodum',sans-serif;font-size:24px;font-weight:700}
+.baby-age{color:var(--sub);font-size:13px;margin-top:2px}
+.icon-btn{border:0;background:var(--soft);width:40px;height:40px;border-radius:12px;font-size:18px}
+.tabs{display:flex;gap:6px;margin-top:12px;background:var(--soft);padding:4px;border-radius:14px}
+.tabs button{flex:1;border:0;background:transparent;padding:9px 0;border-radius:10px;font-weight:500;color:var(--sub)}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* 타임라인 */
+.month{margin-top:22px}
+.month-h{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.month-h b{font-family:'Gowun Dodum',sans-serif;font-size:19px}
+.month-h span{color:var(--sub);font-size:12px}
+.month.now .month-h b{color:var(--accent)}
+.tl{position:relative;padding-left:22px}
+.tl:before{content:"";position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--line)}
+.item{position:relative;margin-bottom:10px}
+.item:before{content:"";position:absolute;left:-19px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--line);border:2px solid var(--bg)}
+.item.rec:before{background:var(--accent)}
+.card{background:var(--card);border-radius:14px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.item.exp .card{background:transparent;border:1.5px dashed var(--line);box-shadow:none}
+.item.exp .t{color:var(--sub)}
+.t{font-weight:700;display:flex;align-items:center;gap:6px}
+.meta{color:var(--sub);font-size:12px;margin-top:3px;line-height:1.5}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--sub);margin-top:6px;margin-right:4px}
+.pill.hot{background:#FDE7DF;color:var(--accent-d)}
+.pill.good{background:#E3F3EA;color:#2E7D55}
+.cmts{margin-top:8px;display:grid;gap:6px}
+.cmt{font-size:13px;line-height:1.5;padding:7px 10px;border-radius:10px;background:var(--soft)}
+.cmt b{font-size:11px;margin-right:6px}
+.cmt.mom b{color:var(--c-social)} .cmt.dad b{color:var(--c-lang)}
+.thumbs{display:flex;gap:6px;margin-top:8px;overflow-x:auto}
+.thumbs img{width:72px;height:72px;object-fit:cover;border-radius:10px;background:var(--soft);flex:none}
+.today-mark{display:flex;align-items:center;gap:8px;margin:6px 0 12px -22px;color:var(--accent);font-size:12px;font-weight:700}
+.today-mark:after{content:"";flex:1;height:2px;background:var(--accent);opacity:.4}
+.cat-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* 달력 */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:18px 0 10px}
+.cal-head b{font-family:'Gowun Dodum',sans-serif;font-size:20px}
+.cal-head button{border:0;background:var(--soft);border-radius:10px;width:38px;height:38px}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;color:var(--sub);margin-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.day{position:relative;min-height:74px;border-radius:10px;background:var(--card);padding:4px 3px;border:0;text-align:left;display:flex;flex-direction:column;overflow:hidden}
+.day.out{opacity:.35}
+.day.today{outline:2px solid var(--accent)}
+.day .n{font-size:12px;font-weight:500;position:relative;z-index:1}
+.day .bands{position:absolute;left:4px;right:4px;bottom:4px;display:flex;flex-direction:column;gap:2px;z-index:1}
+.day .bands i{height:4px;border-radius:2px;opacity:.55}
+.day.peak{box-shadow:inset 0 0 0 1.5px var(--pc)}
+.day .lbl{position:relative;z-index:1;font-size:9.5px;line-height:1.2;color:var(--ink);opacity:.75;margin-top:1px;word-break:keep-all}
+.day .recs{position:relative;z-index:1;margin-top:auto;display:flex;flex-wrap:wrap;gap:1px;font-size:11px}
+.day .ms{position:relative;z-index:1;font-size:9.5px;font-weight:700;color:#fff;background:var(--accent);border-radius:5px;padding:1px 3px;margin-top:1px;word-break:keep-all}
+.day .ph{position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;object-fit:cover;z-index:1}
+.day .spec{position:relative;z-index:1;font-size:9.5px;font-weight:700;color:var(--accent-d)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px;color:var(--sub)}
+.legend span{display:flex;align-items:center;gap:4px}
+
+/* 앨범 */
+.album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.album-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;background:var(--soft)}
+
+/* FAB */
+.fab{position:fixed;right:max(16px,calc(50% - 304px));bottom:calc(env(safe-area-inset-bottom) + 20px);border:0;background:var(--accent);color:#fff;font-weight:700;padding:14px 20px;border-radius:99px;box-shadow:0 6px 18px rgba(224,122,95,.4);z-index:30}
+
+/* 시트 */
+.sheet-bg{position:fixed;inset:0;background:rgba(40,30,25,.35);display:none;z-index:50;align-items:flex-end;justify-content:center}
+.sheet-bg.on{display:flex}
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 24px)}
+.sheet h3{margin:0 0 4px;font-family:'Gowun Dodum',sans-serif;font-size:20px}
+.sheet .sub{color:var(--sub);font-size:13px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{border:1.5px solid var(--line);background:var(--card);border-radius:99px;padding:7px 12px;font-size:14px}
+.chip.on{border-color:var(--accent);background:#FDE7DF;color:var(--accent-d);font-weight:700}
+.f{margin-bottom:12px}
+.f label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+.f input,.f select,.f textarea{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;outline:none}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--accent)}
+.f textarea{min-height:70px;resize:vertical}
+.unit{display:flex;align-items:center;gap:6px}.unit span{color:var(--sub);font-size:13px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmt-in.mom textarea{border-color:#F3C6D2}.cmt-in.dad textarea{border-color:#C6DBF3}
+.cmt-in.me label:after{content:" (나)";color:var(--accent)}
+.btns{display:flex;gap:8px;margin-top:16px}
+.btn{flex:1;border:0;border-radius:12px;padding:13px;font-weight:700;background:var(--soft)}
+.btn.pri{background:var(--accent);color:#fff}
+.btn.del{flex:none;background:#FBE4E4;color:#B54848;padding:13px 16px}
+.photo-pick{display:flex;gap:6px;flex-wrap:wrap}
+.photo-pick .ph{position:relative;width:72px;height:72px}
+.photo-pick .ph img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.photo-pick .ph button{position:absolute;top:-6px;right:-6px;border:0;width:22px;height:22px;border-radius:50%;background:#3A3330;color:#fff;font-size:12px;line-height:22px;padding:0}
+.photo-pick .add{width:72px;height:72px;border:1.5px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--sub);background:var(--card)}
+.list-rec{display:grid;gap:8px}
+.mini{display:flex;gap:10px;align-items:flex-start;background:var(--card);border-radius:12px;padding:10px 12px;border:0;text-align:left;width:100%}
+.mini .e{font-size:20px}
+.exp-row{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 10px;border-radius:10px;background:var(--card);margin-bottom:6px}
+.sec-t{font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px}
+.empty{color:var(--sub);text-align:center;padding:40px 0;font-size:14px;line-height:1.7}
+.note{font-size:12px;color:var(--sub);line-height:1.6;background:var(--soft);padding:10px 12px;border-radius:10px}
+.login{position:fixed;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.login.on{display:flex}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#3A3330;color:#fff;padding:10px 16px;border-radius:99px;font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-row">
+    <div>
+      <div class="baby-name" id="babyName">온유</div>
+      <div class="baby-age" id="babyAge"></div>
+    </div>
+    <button class="icon-btn" id="btnSettings" aria-label="설정">⚙️</button>
+  </div>
+  <div class="tabs" id="tabs">
+    <button data-view="timeline" class="on">📈 타임라인</button>
+    <button data-view="calendar">🗓️ 달력</button>
+    <button data-view="album">📷 앨범</button>
+  </div>
+</div>
+<main class="wrap" id="view"></main>
+<button class="fab" id="fab">＋ 기록하기</button>
+<div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div class="login" id="login">
+  <div style="font-size:56px">👶</div>
+  <div class="baby-name">온유 성장일기</div>
+  <div style="color:var(--sub)">엄마, 아빠 구글 계정으로 로그인해 주세요</div>
+  <button class="btn pri" id="btnLogin" style="flex:none;padding:13px 28px">Google로 로그인</button>
+  <div id="loginMsg" style="color:#B54848;font-size:13px"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+/* =========================================================
+   1. 설정 (Firebase 연결 시 여기만 채우면 됨)
+   ========================================================= */
+// Firebase 콘솔 > 프로젝트 설정 > 웹 앱의 firebaseConfig 를 붙여넣기. null 이면 이 기기에만 저장되는 로컬 모드.
+const FIREBASE_CONFIG = null;
+// 부부가 함께 쓰는 데이터 묶음 이름 (바꾸지 않아도 됨)
+const FAMILY_ID = 'onyu-family';
+// 로그인 허용 계정과 역할. 예: { 'wife@gmail.com': 'mom', 'shawn@gmail.com': 'dad' }
+const MEMBERS = {};
+
+/* =========================================================
+   2. 발달 기준표
+   median: 평균(중앙값) 시기, 생후 일수
+   lo~hi : 보통 범위 (대부분 아이가 이 안에서 해냄)
+   달력에는 median ±3일(약 1주)만 얇은 색 막대로 표시하고, 보통 범위는 글로만 보여줌.
+   근거: CDC Learn the Signs (2022 개정), WHO 대근육 발달 연구(2006),
+        일반 소아과 육아 자료를 바탕으로 한 근사치. 필요하면 숫자만 고치면 됨.
+   ========================================================= */
+const MILESTONES = [
+  {id:'gaze',      name:'눈 맞추기',              e:'👀', cat:'social', median:42,  lo:28,  hi:60},
+  {id:'smile',     name:'사회적 미소',            e:'😊', cat:'social', median:49,  lo:35,  hi:70},
+  {id:'coo',       name:'옹알이 시작 (아~우~)',    e:'🗣️', cat:'lang',   median:56,  lo:42,  hi:90},
+  {id:'headup',    name:'엎드려 고개 들기',        e:'🐢', cat:'gross',  median:63,  lo:42,  hi:90},
+  {id:'hands',     name:'손 빨기 · 손 바라보기',   e:'✋', cat:'fine',   median:75,  lo:56,  hi:105},
+  {id:'laugh',     name:'소리 내어 웃기',          e:'😆', cat:'social', median:105, lo:84,  hi:130},
+  {id:'headctrl',  name:'목 가누기',              e:'💪', cat:'gross',  median:112, lo:84,  hi:140},
+  {id:'grasp',     name:'장난감 쥐고 흔들기',      e:'🧸', cat:'fine',   median:120, lo:98,  hi:150},
+  {id:'roll1',     name:'뒤집기 (엎드림→바로)',    e:'🔄', cat:'gross',  median:130, lo:105, hi:170},
+  {id:'feet',      name:'발 잡고 놀기',            e:'🦶', cat:'fine',   median:150, lo:120, hi:190},
+  {id:'roll2',     name:'뒤집기 (바로→엎드림)',    e:'🔁', cat:'gross',  median:160, lo:130, hi:200},
+  {id:'sit',       name:'혼자 앉기',              e:'🪑', cat:'gross',  median:180, lo:115, hi:275},
+  {id:'solid',     name:'이유식 시작',            e:'🥣', cat:'life',   median:180, lo:165, hi:200},
+  {id:'babble',    name:'바바·마마 옹알이',        e:'💬', cat:'lang',   median:190, lo:150, hi:240},
+  {id:'transfer',  name:'물건 양손으로 옮겨 잡기', e:'🤲', cat:'fine',   median:195, lo:165, hi:240},
+  {id:'commando',  name:'배밀이',                 e:'🐛', cat:'gross',  median:210, lo:180, hi:255},
+  {id:'stranger',  name:'낯가림',                 e:'🙈', cat:'social', median:215, lo:180, hi:270},
+  {id:'name',      name:'이름 부르면 돌아보기',    e:'👂', cat:'lang',   median:220, lo:180, hi:275},
+  {id:'standhold', name:'잡고 서기',              e:'🧍', cat:'gross',  median:225, lo:145, hi:345},
+  {id:'tooth',     name:'첫 이 나기',              e:'🦷', cat:'life',   median:200, lo:120, hi:365},
+  {id:'crawl',     name:'네발 기기',              e:'🐾', cat:'gross',  median:255, lo:160, hi:410},
+  {id:'pincer',    name:'엄지·검지로 집기',        e:'🤏', cat:'fine',   median:270, lo:240, hi:310},
+  {id:'cruise',    name:'잡고 걷기',              e:'🚶', cat:'gross',  median:275, lo:180, hi:415},
+  {id:'wave',      name:'빠이빠이 · 짝짜꿍',       e:'👋', cat:'social', median:285, lo:250, hi:340},
+  {id:'standalone',name:'혼자 서기',              e:'⭐', cat:'gross',  median:330, lo:210, hi:515},
+  {id:'mama',      name:'엄마·아빠 (뜻 알고)',     e:'👪', cat:'lang',   median:345, lo:300, hi:420},
+  {id:'walk',      name:'첫걸음',                 e:'👣', cat:'gross',  median:365, lo:250, hi:535},
+  {id:'word',      name:'첫 단어',                e:'📣', cat:'lang',   median:365, lo:300, hi:450},
+].sort((a,b)=>a.median-b.median);
+const PEAK = 3; // 달력 표시: 평균일 기준 ±3일 (약 1주)
+const CATS = {
+  gross:{label:'대근육', color:'var(--c-gross)', rgba:'rgba(233,162,59,.20)'},
+  social:{label:'사회성', color:'var(--c-social)', rgba:'rgba(226,109,140,.18)'},
+  lang:{label:'언어', color:'var(--c-lang)', rgba:'rgba(79,143,214,.18)'},
+  fine:{label:'소근육', color:'var(--c-fine)', rgba:'rgba(79,167,122,.18)'},
+  life:{label:'생활', color:'var(--c-life)', rgba:'rgba(154,121,208,.18)'},
+};
+
+/* =========================================================
+   3. 기록 유형과 입력 항목 (드롭다운 위주)
+   ========================================================= */
+const TYPES = {
+  milestone:{label:'발달', e:'⭐'},
+  moment:   {label:'순간', e:'💛'},
+  growth:   {label:'키·몸무게', e:'📏'},
+  feed:     {label:'수유', e:'🍼'},
+  sleep:    {label:'수면', e:'😴'},
+  diaper:   {label:'기저귀', e:'🧷'},
+  health:   {label:'건강', e:'🩺'},
+};
+const FIELDS = {
+  milestone:[
+    {k:'milestoneId', l:'어떤 발달을 했나요?', kind:'milestone'},
+    {k:'custom', l:'목록에 없으면 직접 입력', kind:'text', ph:'예: 처음으로 손뼉 침'},
+  ],
+  moment:[
+    {k:'tag', l:'어떤 순간인가요?', kind:'select', opts:['그냥 오늘','첫 외출','첫 목욕','가족·친척 만남','처음 해본 것','웃긴 순간','여행','기념일','성장 사진']},
+    {k:'title', l:'한 줄 제목', kind:'text', ph:'예: 할머니 품에서 처음 웃음'},
+  ],
+  growth:[
+    {k:'height', l:'키', kind:'number', unit:'cm', step:'0.1'},
+    {k:'weight', l:'몸무게', kind:'number', unit:'kg', step:'0.01'},
+    {k:'head', l:'머리둘레', kind:'number', unit:'cm', step:'0.1'},
+    {k:'where', l:'측정 장소', kind:'select', opts:['집','소아과','영유아 검진','기타']},
+  ],
+  feed:[
+    {k:'kind', l:'종류', kind:'select', opts:['분유','모유 (왼쪽)','모유 (오른쪽)','모유 (양쪽)','유축 모유','이유식']},
+    {k:'time', l:'시간', kind:'time'},
+    {k:'amount', l:'양', kind:'number', unit:'ml', step:'5'},
+    {k:'minutes', l:'수유 시간', kind:'number', unit:'분', step:'1'},
+  ],
+  sleep:[
+    {k:'start', l:'잠든 시간', kind:'time'},
+    {k:'end', l:'깬 시간', kind:'time'},
+    {k:'quality', l:'수면 상태', kind:'select', opts:['푹 잤어요','자주 깼어요','안아서 재움','혼자 잠듦','낮잠']},
+  ],
+  diaper:[
+    {k:'time', l:'시간', kind:'time'},
+    {k:'kind', l:'종류', kind:'select', opts:['소변','대변','소변+대변']},
+    {k:'stool', l:'대변 상태', kind:'select', opts:['','황금색 보통','묽음','된변','초록색','기타 (코멘트에)']},
+  ],
+  health:[
+    {k:'kind', l:'종류', kind:'select', opts:['체온 체크','소아과 진료','예방접종','영유아 검진','약 복용','기타']},
+    {k:'temp', l:'체온', kind:'number', unit:'℃', step:'0.1'},
+    {k:'vaccine', l:'접종 종류 (해당 시)', kind:'select', opts:['','B형간염','DTaP','소아마비(IPV)','Hib','폐렴구균','로타바이러스','인플루엔자','기타']},
+    {k:'memo', l:'진료 · 처방 메모', kind:'text'},
+  ],
+};
+const MOODS = ['','😊 방긋','😌 평온','🥱 졸림','😢 보챔','😤 칭얼','🤒 아픔'];
+const KEY_TYPES = ['milestone','moment','growth','health']; // 타임라인에 보이는 유형
+
+/* =========================================================
+   4. 날짜 도우미
+   ========================================================= */
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d);};
+const addMonths=(s,n)=>{const d=parse(s);const day=d.getDate();const t=new Date(d.getFullYear(),d.getMonth()+n,1);const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();t.setDate(Math.min(day,last));return ymd(t);};
+const diff=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
+const todayStr=()=>ymd(new Date());
+const md=s=>{const d=parse(s);return `${d.getMonth()+1}/${d.getDate()}`;};
+const DOW=['일','월','화','수','목','금','토'];
+const fullDate=s=>{const d=parse(s);return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`;};
+function ageMonth(birth,date){const b=parse(birth),d=parse(date);let m=(d.getFullYear()-b.getFullYear())*12+(d.getMonth()-b.getMonth());if(d.getDate()<b.getDate())m--;return Math.max(0,m);}
+function ageLabel(birth,date){const days=diff(birth,date);if(days<0)return '태어나기 전';const m=ageMonth(birth,date);const rest=diff(addMonths(birth,m),date);return m===0?`생후 ${days}일`:`생후 ${days}일 · ${m}개월 ${rest}일`;}
+const rangeTxt=(lo,hi)=>{const f=d=>d<100?`${Math.round(d/7)}주`:`${(d/30.44).toFixed(1).replace('.0','')}개월`;return `${f(lo)} ~ ${f(hi)}`;};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800);}
+
+/* =========================================================
+   5. 저장소 (로컬 IndexedDB 또는 Firebase)
+   ========================================================= */
+const photoCache=new Map();
+const LocalStore={
+  mode:'local',
+  _db:null,
+  async open(){if(this._db)return this._db;this._db=await new Promise((res,rej)=>{const r=indexedDB.open('onyu-diary',1);r.onupgradeneeded=()=>{const db=r.result;['entries','photos','kv'].forEach(n=>db.createObjectStore(n));};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});return this._db;},
+  async _tx(store,mode,fn){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction(store,mode);const req=fn(t.objectStore(store));t.oncomplete=()=>res(req?req.result:undefined);t.onerror=()=>rej(t.error);});},
+  async init(){},
+  async listEntries(){return (await this._tx('entries','readonly',s=>s.getAll()))||[];},
+  async saveEntry(e){await this._tx('entries','readwrite',s=>s.put(e,e.id));},
+  async deleteEntry(id){await this._tx('entries','readwrite',s=>s.delete(id));},
+  async getPhoto(id){if(photoCache.has(id))return photoCache.get(id);const v=await this._tx('photos','readonly',s=>s.get(id));if(v)photoCache.set(id,v);return v;},
+  async savePhoto(id,data){photoCache.set(id,data);await this._tx('photos','readwrite',s=>s.put(data,id));},
+  async deletePhoto(id){photoCache.delete(id);await this._tx('photos','readwrite',s=>s.delete(id));},
+  async getSettings(){return (await this._tx('kv','readonly',s=>s.get('settings')))||null;},
+  async saveSettings(v){await this._tx('kv','readwrite',s=>s.put(v,'settings'));},
+  onChange(){},
+};
+
+const FB='https://www.gstatic.com/firebasejs/10.12.2/';
+const FireStore={
+  mode:'firebase', fs:null, db:null, user:null, role:null, _cb:null,
+  async init(){
+    const {initializeApp}=await import(FB+'firebase-app.js');
+    const A=await import(FB+'firebase-auth.js');
+    this.fs=await import(FB+'firebase-firestore.js');
+    const app=initializeApp(FIREBASE_CONFIG);
+    this.db=this.fs.getFirestore(app);
+    const auth=A.getAuth(app);
+    document.getElementById('btnLogin').onclick=()=>A.signInWithPopup(auth,new A.GoogleAuthProvider()).catch(e=>{document.getElementById('loginMsg').textContent='로그인 실패: '+e.message;});
+    this.signOut=()=>A.signOut(auth);
+    await new Promise(res=>{
+      A.onAuthStateChanged(auth,u=>{
+        const login=document.getElementById('login');
+        if(!u){login.classList.add('on');return;}
+        const role=MEMBERS[u.email];
+        if(Object.keys(MEMBERS).length && !role){document.getElementById('loginMsg').textContent=`${u.email} 계정은 등록되어 있지 않아요`;A.signOut(auth);return;}
+        this.user=u; this.role=role||'dad'; login.classList.remove('on'); res();
+      });
+    });
+    const col=this.fs.collection(this.db,'families',FAMILY_ID,'entries');
+    this.fs.onSnapshot(col,snap=>{if(this._cb)this._cb(snap.docs.map(d=>d.data()));});
+  },
+  _ref(...p){return this.fs.doc(this.db,'families',FAMILY_ID,...p);},
+  async listEntries(){const s=await this.fs.getDocs(this.fs.collection(this.db,'families',FAMILY_ID,'entries'));return s.docs.map(d=>d.data());},
+  async saveEntry(e){await this.fs.setDoc(this._ref('entries',e.id),e);},
+  async deleteEntry(id){await this.fs.deleteDoc(this._ref('entries',id));},
+  async getPhoto(id){if(photoCache.has(id))return photoCache.get(id);const s=await this.fs.getDoc(this._ref('photos',id));const v=s.exists()?s.data().data:null;if(v)photoCache.set(id,v);return v;},
+  async savePhoto(id,data){photoCache.set(id,data);await this.fs.setDoc(this._ref('photos',id),{data});},
+  async deletePhoto(id){photoCache.delete(id);await this.fs.deleteDoc(this._ref('photos',id));},
+  async getSettings(){const s=await this.fs.getDoc(this.fs.doc(this.db,'families',FAMILY_ID));return s.exists()?s.data().settings:null;},
+  async saveSettings(v){await this.fs.setDoc(this.fs.doc(this.db,'families',FAMILY_ID),{settings:v},{merge:true});},
+  onChange(cb){this._cb=cb;},
+};
+const Store=FIREBASE_CONFIG?FireStore:LocalStore;
+
+/* =========================================================
+   6. 상태
+   ========================================================= */
+const S={view:'timeline',calMonth:null,entries:[],settings:null};
+const me=()=>Store.mode==='firebase'?Store.role:(S.settings.me||'dad');
+const birth=()=>S.settings.birthDate;
+const msById=Object.fromEntries(MILESTONES.map(m=>[m.id,m]));
+function achievedMap(){const m={};S.entries.filter(e=>e.type==='milestone'&&e.data?.milestoneId).sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{if(!m[e.data.milestoneId])m[e.data.milestoneId]=e;});return m;}
+const medianDate=ms=>addDays(birth(),ms.median);
+
+/* =========================================================
+   7. 화면: 타임라인
+   ========================================================= */
+function entryTitle(e){
+  const d=e.data||{};
+  if(e.type==='milestone'){const ms=msById[d.milestoneId];return ms?`${ms.e} ${ms.name}`:`⭐ ${esc(d.custom||'새로운 발달')}`;}
+  if(e.type==='moment')return `💛 ${esc(d.title||d.tag||'기억하고 싶은 순간')}`;
+  if(e.type==='growth')return '📏 키 · 몸무게 측정';
+  if(e.type==='health')return `🩺 ${esc(d.kind||'건강')}${d.vaccine?' · '+esc(d.vaccine):''}`;
+  if(e.type==='feed')return `🍼 ${esc(d.kind||'수유')}`;
+  if(e.type==='sleep')return `😴 ${esc(d.quality||'수면')}`;
+  if(e.type==='diaper')return `🧷 ${esc(d.kind||'기저귀')}`;
+  return esc(TYPES[e.type]?.label);
+}
+function entryMeta(e){
+  const d=e.data||{};const p=[];
+  if(e.type==='growth'){if(d.height)p.push(`키 ${d.height}cm`);if(d.weight)p.push(`몸무게 ${d.weight}kg`);if(d.head)p.push(`머리둘레 ${d.head}cm`);if(d.where)p.push(d.where);}
+  if(e.type==='feed'){if(d.time)p.push(d.time);if(d.amount)p.push(`${d.amount}ml`);if(d.minutes)p.push(`${d.minutes}분`);}
+  if(e.type==='sleep'){if(d.start||d.end)p.push(`${d.start||'?'} ~ ${d.end||'?'}`);}
+  if(e.type==='diaper'){if(d.time)p.push(d.time);if(d.stool)p.push(d.stool);}
+  if(e.type==='health'){if(d.temp)p.push(`${d.temp}℃`);if(d.memo)p.push(esc(d.memo));}
+  if(e.type==='moment'&&d.title&&d.tag)p.push(esc(d.tag));
+  if(e.mood)p.push(e.mood);
+  return p.join(' · ');
+}
+function commentsHTML(e){
+  const c=e.comments||{};let h='';
+  if(c.mom)h+=`<div class="cmt mom"><b>엄마</b>${esc(c.mom)}</div>`;
+  if(c.dad)h+=`<div class="cmt dad"><b>아빠</b>${esc(c.dad)}</div>`;
+  return h?`<div class="cmts">${h}</div>`:'';
+}
+function thumbsHTML(e){return e.photoIds?.length?`<div class="thumbs">${e.photoIds.map(p=>`<img data-pid="${p}" alt="">`).join('')}</div>`:'';}
+function recordCard(e){
+  let extra='';
+  if(e.type==='milestone'){const ms=msById[e.data?.milestoneId];if(ms){const gap=diff(medianDate(ms),e.date);const t=gap<-3?`평균보다 ${-gap}일 빨리 해냈어요`:gap>3?`평균보다 ${gap}일 뒤, 온유만의 속도`:'딱 평균 시기에 해냈어요';extra=`<span class="pill hot">${t}</span>`;}}
+  return `<div class="item rec" data-id="${e.id}"><div class="card">
+    <div class="t">${entryTitle(e)}</div>
+    <div class="meta">${md(e.date)} · ${ageLabel(birth(),e.date).split(' · ')[0]}${entryMeta(e)?' · '+entryMeta(e):''}</div>
+    ${extra}${thumbsHTML(e)}${commentsHTML(e)}</div></div>`;
+}
+function expCard(ms){
+  const t=todayStr();const md0=medianDate(ms);const g=diff(t,md0);
+  let st;
+  if(g>PEAK)st=`<span class="pill">D-${g}</span>`;
+  else if(g>=-PEAK)st=`<span class="pill hot">👀 지금이 평균 시기</span>`;
+  else st=`<span class="pill">평균 시기 지남 · 보통 범위 안이면 괜찮아요</span>`;
+  return `<div class="item exp" data-ms="${ms.id}"><div class="card">
+    <div class="t"><span class="cat-dot" style="background:${CATS[ms.cat].color}"></span>${ms.e} ${ms.name}</div>
+    <div class="meta">평균 ${md(md0)} (생후 ${ms.median}일) · 보통 범위 ${rangeTxt(ms.lo,ms.hi)}</div>${st}</div></div>`;
+}
+function renderTimeline(){
+  const b=birth(),t=todayStr(),cur=ageMonth(b,t);
+  const done=achievedMap();
+  const keyEntries=S.entries.filter(e=>KEY_TYPES.includes(e.type)&&!(e.type==='health'&&!['예방접종','영유아 검진','소아과 진료'].includes(e.data?.kind)));
+  const lastM=Math.max(12,cur+3);
+  let h='';
+  for(let m=0;m<=lastM;m++){
+    const start=addMonths(b,m),end=addDays(addMonths(b,m+1),-1);
+    const items=[];
+    MILESTONES.filter(ms=>!done[ms.id]).forEach(ms=>{const d=medianDate(ms);if(d>=start&&d<=end)items.push({date:d,html:expCard(ms),ord:1});});
+    keyEntries.filter(e=>e.date>=start&&e.date<=end).forEach(e=>items.push({date:e.date,html:recordCard(e),ord:0}));
+    if(m===cur)items.push({date:t,html:`<div class="today-mark">오늘 · ${ageLabel(b,t).split(' · ')[0]}</div>`,ord:-1});
+    items.sort((a,b2)=>a.date.localeCompare(b2.date)||a.ord-b2.ord);
+    const label=m===0?'첫 달 (0개월)':m===12?'첫돌 (12개월)':`${m}개월`;
+    h+=`<section class="month ${m===cur?'now':''}" id="m${m}"><div class="month-h"><b>${label}</b><span>${md(start)} ~ ${md(end)}</span></div>
+      <div class="tl">${items.map(i=>i.html).join('')||'<div class="meta" style="padding:4px 0 8px">이 달의 기록을 기다리는 중</div>'}</div></section>`;
+  }
+  view.innerHTML=h;
+  hydrate();
+  view.querySelectorAll('.item.rec').forEach(el=>el.onclick=()=>openEditor(S.entries.find(e=>e.id===el.dataset.id)));
+  view.querySelectorAll('.item.exp').forEach(el=>el.onclick=()=>openEditor(null,{type:'milestone',date:todayStr(),milestoneId:el.dataset.ms}));
+  if(!S._scrolled){S._scrolled=true;requestAnimationFrame(()=>document.getElementById('m'+cur)?.scrollIntoView({block:'start'}));}
+}
+
+/* =========================================================
+   8. 화면: 월간 달력
+   ========================================================= */
+function specialDay(d){
+  const b=birth();const n=diff(b,d);
+  if(n===0)return '🎂 태어난 날';
+  if(n===99)return '🎉 백일';
+  if(d===addMonths(b,12))return '🎂 첫돌';
+  if(n>0&&n<365&&d===addMonths(b,ageMonth(b,d))&&parse(d).getDate()===parse(b).getDate())return `${ageMonth(b,d)}개월`;
+  return '';
+}
+function renderCalendar(){
+  if(!S.calMonth)S.calMonth=todayStr().slice(0,7)+'-01';
+  const first=parse(S.calMonth);const y=first.getFullYear(),mo=first.getMonth();
+  const start=addDays(S.calMonth,-first.getDay());
+  const done=achievedMap();const t=todayStr();
+  const pending=MILESTONES.filter(ms=>!done[ms.id]);
+  let cells='';
+  for(let i=0;i<42;i++){
+    const d=addDays(start,i);const dd=parse(d);
+    if(i>=35&&dd.getMonth()!==mo)break;
+    const bands=pending.filter(ms=>Math.abs(diff(medianDate(ms),d))<=PEAK);
+    const peaks=pending.filter(ms=>medianDate(ms)===d);
+    const recs=S.entries.filter(e=>e.date===d);
+    const msRecs=recs.filter(e=>e.type==='milestone');
+    const ph=recs.find(e=>e.photoIds?.length);
+    const icons=[...new Set(recs.filter(e=>e.type!=='milestone').map(e=>TYPES[e.type].e))].slice(0,4).join('');
+    const sp=specialDay(d);
+    cells+=`<button class="day ${dd.getMonth()!==mo?'out':''} ${d===t?'today':''} ${peaks.length?'peak':''}" ${peaks.length?`style="--pc:${CATS[peaks[0].cat].color};background:${CATS[peaks[0].cat].rgba}"`:''} data-d="${d}">
+      <div class="bands">${bands.slice(0,3).map(ms=>`<i style="background:${CATS[ms.cat].color}"></i>`).join('')}</div>
+      <span class="n">${dd.getDate()}</span>
+      ${ph?`<img class="ph" data-pid="${ph.photoIds[0]}" alt="">`:''}
+      ${sp?`<span class="spec">${sp}</span>`:''}
+      ${msRecs.map(e=>`<span class="ms">${msById[e.data.milestoneId]?.e||'⭐'} ${esc((msById[e.data.milestoneId]?.name||e.data.custom||'발달').replace(/\s*\(.*\)/,'').slice(0,6))}</span>`).join('')}
+      ${peaks.map(ms=>`<span class="lbl">${ms.e}${ms.name.split(' ')[0]}</span>`).join('')}
+      <span class="recs">${icons}</span></button>`;
+  }
+  view.innerHTML=`<div class="cal-head"><button id="prevM">‹</button><b>${y}년 ${mo+1}월</b><button id="nextM">›</button></div>
+    <div class="dow">${DOW.map(x=>`<div>${x}</div>`).join('')}</div><div class="grid">${cells}</div>
+    <div class="legend">${Object.values(CATS).map(c=>`<span><i class="cat-dot" style="background:${c.color}"></i>${c.label}</span>`).join('')}<span><i class="cat-dot" style="background:var(--accent)"></i>온유 기록</span></div>
+    <div class="note" style="margin-top:12px">색 테두리가 있는 날이 평균일이고, 아래 얇은 막대는 그 앞뒤 3일(약 1주)을 뜻해요. 아이마다 보통 범위는 훨씬 넓으니 참고만 하세요.</div>`;
+  hydrate();
+  document.getElementById('prevM').onclick=()=>{S.calMonth=ymd(new Date(y,mo-1,1));renderCalendar();};
+  document.getElementById('nextM').onclick=()=>{S.calMonth=ymd(new Date(y,mo+1,1));renderCalendar();};
+  view.querySelectorAll('.day').forEach(el=>el.onclick=()=>openDay(el.dataset.d));
+}
+function openDay(d){
+  const done=achievedMap();
+  const exp=MILESTONES.filter(ms=>!done[ms.id]&&Math.abs(diff(medianDate(ms),d))<=PEAK);
+  const recs=S.entries.filter(e=>e.date===d).sort((a,b)=>(a.data?.time||a.data?.start||'').localeCompare(b.data?.time||b.data?.start||''));
+  const cnt=t=>recs.filter(e=>e.type===t).length;
+  const sum=[['feed','수유'],['sleep','수면'],['diaper','기저귀']].filter(([t])=>cnt(t)).map(([t,l])=>`${TYPES[t].e} ${l} ${cnt(t)}회`).join(' · ');
+  openSheet(`<h3>${fullDate(d)}</h3><div class="sub">${ageLabel(birth(),d)}${specialDay(d)?' · '+specialDay(d):''}</div>
+    ${sum?`<div class="note">${sum}</div>`:''}
+    ${exp.length?`<div class="sec-t">이 무렵 평균 발달 (참고)</div>${exp.map(ms=>`<div class="exp-row" data-ms="${ms.id}"><span class="cat-dot" style="background:${CATS[ms.cat].color}"></span>${ms.e} ${ms.name}<span style="margin-left:auto;color:var(--sub);font-size:12px">평균 ${md(medianDate(ms))}</span></div>`).join('')}`:''}
+    <div class="sec-t">온유 기록</div>
+    <div class="list-rec">${recs.map(e=>`<button class="mini" data-id="${e.id}"><div style="flex:1"><div class="t">${entryTitle(e)}</div><div class="meta">${entryMeta(e)}</div>${thumbsHTML(e)}${commentsHTML(e)}</div></button>`).join('')||'<div class="meta">아직 기록이 없어요</div>'}</div>
+    <div class="btns"><button class="btn" id="dClose">닫기</button><button class="btn pri" id="dAdd">＋ 이 날 기록하기</button></div>`);
+  hydrate(sheet);
+  sheet.querySelectorAll('.mini').forEach(el=>el.onclick=()=>openEditor(S.entries.find(e=>e.id===el.dataset.id)));
+  sheet.querySelectorAll('.exp-row').forEach(el=>el.onclick=()=>openEditor(null,{type:'milestone',date:d,milestoneId:el.dataset.ms}));
+  document.getElementById('dClose').onclick=closeSheet;
+  document.getElementById('dAdd').onclick=()=>openEditor(null,{date:d});
+}
+
+/* =========================================================
+   9. 화면: 앨범
+   ========================================================= */
+function renderAlbum(){
+  const withP=S.entries.filter(e=>e.photoIds?.length).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!withP.length){view.innerHTML='<div class="empty">📷<br>사진을 올리면 여기에 월별로 모여요.<br>나중에 포토북으로 만들 수 있게 준비할게요.</div>';return;}
+  const groups={};withP.forEach(e=>{const m=ageMonth(birth(),e.date);(groups[m]=groups[m]||[]).push(e);});
+  view.innerHTML=Object.keys(groups).sort((a,b)=>b-a).map(m=>`<section class="month"><div class="month-h"><b>${m}개월</b><span>${groups[m].reduce((n,e)=>n+e.photoIds.length,0)}장</span></div>
+    <div class="album-grid">${groups[m].flatMap(e=>e.photoIds.map(p=>`<img data-pid="${p}" data-id="${e.id}" alt="">`)).join('')}</div></section>`).join('');
+  hydrate();
+  view.querySelectorAll('img[data-id]').forEach(el=>el.onclick=()=>openEditor(S.entries.find(e=>e.id===el.dataset.id)));
+}
+
+/* =========================================================
+   10. 기록 작성 / 수정
+   ========================================================= */
+let draft=null;
+function openEditor(entry,preset={}){
+  const isNew=!entry;
+  draft=entry?structuredClone(entry):{id:uid(),date:preset.date||todayStr(),type:preset.type||'milestone',data:{},mood:'',photoIds:[],comments:{mom:'',dad:''},author:me(),createdAt:Date.now()};
+  if(preset.milestoneId)draft.data.milestoneId=preset.milestoneId;
+  draft._newPhotos=[];draft._removed=[];
+  renderEditor(isNew);
+}
+function fieldHTML(f){
+  const v=draft.data[f.k]??'';
+  if(f.kind==='milestone'){
+    const done=achievedMap();
+    const groups=Object.entries(CATS).map(([c,info])=>`<optgroup label="${info.label}">${MILESTONES.filter(m=>m.cat===c).map(m=>`<option value="${m.id}" ${v===m.id?'selected':''}>${m.e} ${m.name}${done[m.id]&&done[m.id].id!==draft.id?' (기록됨)':''}</option>`).join('')}</optgroup>`).join('');
+    return `<div class="f"><label>${f.l}</label><select data-k="${f.k}"><option value="">선택하세요</option>${groups}</select></div>`;
+  }
+  if(f.kind==='select')return `<div class="f"><label>${f.l}</label><select data-k="${f.k}">${f.opts.map(o=>`<option ${o===v?'selected':''} value="${esc(o)}">${o||'선택 안 함'}</option>`).join('')}</select></div>`;
+  if(f.kind==='number')return `<div class="f"><label>${f.l}</label><div class="unit"><input type="number" inputmode="decimal" step="${f.step||'any'}" data-k="${f.k}" value="${esc(v)}"><span>${f.unit}</span></div></div>`;
+  if(f.kind==='time')return `<div class="f"><label>${f.l}</label><input type="time" data-k="${f.k}" value="${esc(v)}"></div>`;
+  return `<div class="f"><label>${f.l}</label><input type="text" data-k="${f.k}" value="${esc(v)}" placeholder="${esc(f.ph||'')}"></div>`;
+}
+function renderEditor(isNew){
+  const who=me();
+  if(isNew&&['feed','diaper'].includes(draft.type)&&!draft.data.time){const n=new Date();draft.data.time=`${pad(n.getHours())}:${pad(n.getMinutes())}`;}
+  openSheet(`<h3>${isNew?'새 기록':'기록 수정'}</h3><div class="sub">${ageLabel(birth(),draft.date)}</div>
+    <div class="chips">${Object.entries(TYPES).map(([k,t])=>`<button class="chip ${draft.type===k?'on':''}" data-type="${k}">${t.e} ${t.label}</button>`).join('')}</div>
+    <div class="f"><label>날짜</label><input type="date" id="eDate" value="${draft.date}"></div>
+    ${FIELDS[draft.type].map(fieldHTML).join('')}
+    <div class="f"><label>온유 기분</label><select id="eMood">${MOODS.map(m=>`<option ${m===draft.mood?'selected':''} value="${m}">${m||'선택 안 함'}</option>`).join('')}</select></div>
+    <div class="f"><label>사진</label><div class="photo-pick" id="ePhotos"></div><input type="file" id="eFile" accept="image/*" multiple hidden></div>
+    <div class="f cmt-in mom ${who==='mom'?'me':''}"><label>👩 엄마 코멘트</label><textarea id="cMom" placeholder="엄마의 생각을 남겨요">${esc(draft.comments.mom)}</textarea></div>
+    <div class="f cmt-in dad ${who==='dad'?'me':''}"><label>👨 아빠 코멘트</label><textarea id="cDad" placeholder="아빠의 생각을 남겨요">${esc(draft.comments.dad)}</textarea></div>
+    <div class="btns">${isNew?'':'<button class="btn del" id="eDel">삭제</button>'}<button class="btn" id="eCancel">취소</button><button class="btn pri" id="eSave">저장</button></div>`);
+  renderPhotoPick();
+  const collect=()=>{draft.date=document.getElementById('eDate').value||draft.date;sheet.querySelectorAll('[data-k]').forEach(el=>{draft.data[el.dataset.k]=el.value;});draft.mood=document.getElementById('eMood').value;draft.comments.mom=document.getElementById('cMom').value;draft.comments.dad=document.getElementById('cDad').value;};
+  sheet.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{collect();draft.type=c.dataset.type;renderEditor(isNew);});
+  document.getElementById('eDate').onchange=e=>{draft.date=e.target.value;sheet.querySelector('.sub').textContent=ageLabel(birth(),draft.date);};
+  document.getElementById('eFile').onchange=async e=>{for(const f of e.target.files){draft._newPhotos.push(await compress(f));}renderPhotoPick();e.target.value='';};
+  document.getElementById('eCancel').onclick=closeSheet;
+  document.getElementById('eSave').onclick=async()=>{collect();await saveDraft();};
+  const del=document.getElementById('eDel');
+  if(del)del.onclick=async()=>{if(!confirm('이 기록을 삭제할까요?'))return;for(const p of draft.photoIds)await Store.deletePhoto(p);await Store.deleteEntry(draft.id);S.entries=S.entries.filter(e=>e.id!==draft.id);closeSheet();render();toast('삭제했어요');};
+}
+function renderPhotoPick(){
+  const box=document.getElementById('ePhotos');
+  const existing=draft.photoIds.map((p,i)=>`<div class="ph"><img data-pid="${p}" alt=""><button data-rm="o${i}">✕</button></div>`).join('');
+  const added=draft._newPhotos.map((d,i)=>`<div class="ph"><img src="${d}" alt=""><button data-rm="n${i}">✕</button></div>`).join('');
+  box.innerHTML=existing+added+'<button class="add" id="eAddPh">＋</button>';
+  hydrate(box);
+  document.getElementById('eAddPh').onclick=()=>document.getElementById('eFile').click();
+  box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const k=b.dataset.rm;const i=+k.slice(1);if(k[0]==='o'){draft._removed.push(draft.photoIds[i]);draft.photoIds.splice(i,1);}else draft._newPhotos.splice(i,1);renderPhotoPick();});
+}
+function compress(file,max=1280,q=0.75){
+  return new Promise((res,rej)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const r=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',q));};img.onerror=rej;img.src=url;});
+}
+async function saveDraft(){
+  if(draft.type==='milestone'&&!draft.data.milestoneId&&!draft.data.custom){toast('어떤 발달인지 골라 주세요');return;}
+  const btn=document.getElementById('eSave');btn.disabled=true;btn.textContent='저장 중…';
+  try{
+    for(const d of draft._newPhotos){const id=uid();await Store.savePhoto(id,d);draft.photoIds.push(id);}
+    for(const p of draft._removed)await Store.deletePhoto(p);
+    const keep=new Set(FIELDS[draft.type].map(f=>f.k));
+    const clean={...draft,data:Object.fromEntries(Object.entries(draft.data).filter(([k,v])=>keep.has(k)&&v!==''))};
+    delete clean._newPhotos;delete clean._removed;clean.updatedAt=Date.now();clean.updatedBy=me();
+    await Store.saveEntry(clean);
+    S.entries=S.entries.filter(e=>e.id!==clean.id).concat(clean);
+    closeSheet();render();toast('저장했어요 💛');
+  }catch(err){btn.disabled=false;btn.textContent='저장';toast('저장 실패: '+err.message);}
+}
+
+/* =========================================================
+   11. 설정
+   ========================================================= */
+function openSettings(){
+  const s=S.settings;
+  openSheet(`<h3>설정</h3><div class="sub">${Store.mode==='firebase'?`공동 모드 · ${esc(Store.user.email)} (${Store.role==='mom'?'엄마':'아빠'})`:'로컬 모드 · 이 기기에만 저장 중'}</div>
+    <div class="f"><label>아기 이름</label><input id="sName" value="${esc(s.babyName)}"></div>
+    <div class="f"><label>태어난 날</label><input type="date" id="sBirth" value="${s.birthDate}"></div>
+    ${Store.mode==='local'?`<div class="f"><label>지금 쓰는 사람</label><select id="sMe"><option value="dad" ${s.me==='dad'?'selected':''}>👨 아빠</option><option value="mom" ${s.me==='mom'?'selected':''}>👩 엄마</option></select></div>`:''}
+    <div class="sec-t">백업</div>
+    <div class="btns" style="margin-top:0"><button class="btn" id="sExport">⬇️ 백업 파일 저장</button><button class="btn" id="sImport">⬆️ 백업 불러오기</button></div>
+    <input type="file" id="sFile" accept="application/json" hidden>
+    <div class="note" style="margin-top:12px">발달 기준은 CDC·WHO 자료 기반의 평균 시기예요. 진단 기준이 아니라 기록을 위한 참고용이고, 걱정되는 부분은 영유아 검진 때 소아과 선생님과 상의하세요.</div>
+    <div class="btns">${Store.mode==='firebase'?'<button class="btn del" id="sOut">로그아웃</button>':''}<button class="btn" id="sCancel">취소</button><button class="btn pri" id="sSave">저장</button></div>`);
+  document.getElementById('sCancel').onclick=closeSheet;
+  document.getElementById('sSave').onclick=async()=>{s.babyName=document.getElementById('sName').value||'온유';s.birthDate=document.getElementById('sBirth').value||s.birthDate;const m=document.getElementById('sMe');if(m)s.me=m.value;await Store.saveSettings(s);closeSheet();S._scrolled=false;render();toast('저장했어요');};
+  document.getElementById('sExport').onclick=exportAll;
+  document.getElementById('sImport').onclick=()=>document.getElementById('sFile').click();
+  document.getElementById('sFile').onchange=importAll;
+  const o=document.getElementById('sOut');if(o)o.onclick=()=>Store.signOut();
+}
+async function exportAll(){
+  toast('백업 파일 만드는 중…');
+  const photos={};for(const e of S.entries)for(const p of e.photoIds||[])photos[p]=await Store.getPhoto(p);
+  const blob=new Blob([JSON.stringify({version:1,settings:S.settings,entries:S.entries,photos})],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`onyu-backup-${todayStr()}.json`;a.click();
+}
+async function importAll(e){
+  const f=e.target.files[0];if(!f)return;
+  try{const j=JSON.parse(await f.text());if(!confirm(`기록 ${j.entries.length}개를 불러올까요? 같은 기록은 덮어써요.`))return;
+    for(const [id,d] of Object.entries(j.photos||{}))if(d)await Store.savePhoto(id,d);
+    for(const en of j.entries)await Store.saveEntry(en);
+    if(j.settings){S.settings={...S.settings,...j.settings};await Store.saveSettings(S.settings);}
+    S.entries=await Store.listEntries();closeSheet();render();toast('불러왔어요');
+  }catch(err){toast('불러오기 실패: '+err.message);}
+}
+
+/* =========================================================
+   12. 공통
+   ========================================================= */
+const view=document.getElementById('view'),sheet=document.getElementById('sheet'),sheetBg=document.getElementById('sheetBg');
+function openSheet(html){sheet.innerHTML=html;sheetBg.classList.add('on');sheet.scrollTop=0;document.body.style.overflow='hidden';}
+function closeSheet(){sheetBg.classList.remove('on');document.body.style.overflow='';}
+sheetBg.addEventListener('click',e=>{if(e.target===sheetBg)closeSheet();});
+function hydrate(root=document){root.querySelectorAll('img[data-pid]:not([src])').forEach(async img=>{const d=await Store.getPhoto(img.dataset.pid);if(d)img.src=d;});}
+function render(){
+  document.getElementById('babyName').textContent=S.settings.babyName;
+  document.getElementById('babyAge').textContent=ageLabel(birth(),todayStr());
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.view===S.view));
+  ({timeline:renderTimeline,calendar:renderCalendar,album:renderAlbum})[S.view]();
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{S.view=b.dataset.view;if(S.view==='timeline')S._scrolled=false;window.scrollTo(0,0);render();});
+document.getElementById('fab').onclick=()=>openEditor(null,{date:todayStr(),type:S.view==='timeline'?'milestone':'moment'});
+document.getElementById('btnSettings').onclick=openSettings;
+
+(async function start(){
+  await Store.init();
+  // 기본값: 오늘이 생후 30일이 되는 날 (설정에서 정확한 생일로 바꾸기)
+  S.settings=Object.assign({babyName:'온유',birthDate:addDays(todayStr(),-30),me:'dad'},await Store.getSettings()||{});
+  S.entries=await Store.listEntries();
+  Store.onChange(list=>{S.entries=list;if(!sheetBg.classList.contains('on'))render();});
+  render();
+  if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
