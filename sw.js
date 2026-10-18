@@ -1,5 +1,5 @@
 // 앱 화면을 캐시해서 빠르게 열리게 함. 앱 수정 후에는 VERSION 숫자를 올려 주세요.
-const VERSION = 'onyu-v5';
+const VERSION = 'onyu-v6';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k))))); self.clients.claim(); });
