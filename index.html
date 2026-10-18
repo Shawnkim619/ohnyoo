@@ -396,7 +396,9 @@ const FireStore={
     const A=await import(FB+'firebase-auth.js');
     this.fs=await import(FB+'firebase-firestore.js');
     const app=initializeApp(FIREBASE_CONFIG);
-    this.db=this.fs.getFirestore(app);
+    // 오프라인 캐시: 한 번 받은 기록과 사진은 폰에 저장해두고 바로 보여줌
+    try{this.db=this.fs.initializeFirestore(app,{localCache:this.fs.persistentLocalCache({tabManager:this.fs.persistentMultipleTabManager()})});}
+    catch(_){this.db=this.fs.getFirestore(app);}
     const auth=A.getAuth(app);
     document.getElementById('btnLogin').onclick=()=>A.signInWithPopup(auth,new A.GoogleAuthProvider()).catch(e=>{document.getElementById('loginMsg').textContent='로그인 실패: '+e.message;});
     this.signOut=()=>A.signOut(auth);
@@ -413,13 +415,13 @@ const FireStore={
     this.fs.onSnapshot(col,snap=>{if(this._cb)this._cb(snap.docs.map(d=>d.data()));});
   },
   _ref(...p){return this.fs.doc(this.db,'families',FAMILY_ID,...p);},
-  async listEntries(){const s=await this.fs.getDocs(this.fs.collection(this.db,'families',FAMILY_ID,'entries'));return s.docs.map(d=>d.data());},
+  async listEntries(){const c=this.fs.collection(this.db,'families',FAMILY_ID,'entries');try{const s=await this.fs.getDocsFromCache(c);if(!s.empty)return s.docs.map(d=>d.data());}catch(_){}const s=await this.fs.getDocs(c);return s.docs.map(d=>d.data());},
   async saveEntry(e){await this.fs.setDoc(this._ref('entries',e.id),e);},
   async deleteEntry(id){await this.fs.deleteDoc(this._ref('entries',id));},
-  async getPhoto(id){if(photoCache.has(id))return photoCache.get(id);const s=await this.fs.getDoc(this._ref('photos',id));const v=s.exists()?s.data().data:null;if(v)photoCache.set(id,v);return v;},
+  async getPhoto(id){if(photoCache.has(id))return photoCache.get(id);const r=this._ref('photos',id);let s;try{s=await this.fs.getDocFromCache(r);}catch(_){s=await this.fs.getDoc(r);}const v=s.exists()?s.data().data:null;if(v)photoCache.set(id,v);return v;},
   async savePhoto(id,data){photoCache.set(id,data);await this.fs.setDoc(this._ref('photos',id),{data});},
   async deletePhoto(id){photoCache.delete(id);await this.fs.deleteDoc(this._ref('photos',id));},
-  async getSettings(){const s=await this.fs.getDoc(this.fs.doc(this.db,'families',FAMILY_ID));return s.exists()?s.data().settings:null;},
+  async getSettings(){const r=this.fs.doc(this.db,'families',FAMILY_ID);try{const s=await this.fs.getDocFromCache(r);if(s.exists()){this.fs.getDoc(r).catch(()=>{});return s.data().settings;}}catch(_){}const s=await this.fs.getDoc(r);return s.exists()?s.data().settings:null;},
   async saveSettings(v){await this.fs.setDoc(this.fs.doc(this.db,'families',FAMILY_ID),{settings:v},{merge:true});},
   onChange(cb){this._cb=cb;},
 };
