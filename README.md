@@ -1,7 +1,7 @@
 # 온유 성장일기 배포 가이드
 
 ## 1. 먼저 로컬 모드로 써보기
-- GitHub에 새 저장소(예: onyu)를 만들고 index.html, manifest.json, sw.js, icon-192.png, icon-512.png 5개 파일 업로드
+- GitHub에 새 저장소(예: ohnyoo)를 만들고 index.html, manifest.json, sw.js, icon-192.png, icon-512.png 5개 파일 업로드
 - Settings > Pages > Branch: main / root 선택 후 저장
 - 몇 분 뒤 https://shawnkim619.github.io/ohnyoo/ 접속
 - 이 상태(로컬 모드)는 기기마다 따로 저장됨
