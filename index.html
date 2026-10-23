@@ -29,11 +29,30 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .baby-age{color:var(--sub);font-size:13px;margin-top:2px}
 .icon-btn{border:0;background:var(--soft);width:40px;height:40px;border-radius:12px;font-size:18px}
 .tabs{display:flex;gap:6px;margin-top:12px;background:var(--soft);padding:4px;border-radius:14px}
-.tabs button{flex:1;border:0;background:transparent;padding:9px 0;border-radius:10px;font-weight:500;color:var(--sub)}
+.tabs button{flex:1;border:0;background:transparent;padding:9px 0;font-size:14px;white-space:nowrap;border-radius:10px;font-weight:500;color:var(--sub)}
 .tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 
 /* 타임라인 */
 .month{margin-top:22px}
+/* 수유 탭 */
+.fd-clock{background:var(--card);border-radius:18px;padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-top:6px}
+.fd-clock svg{display:block;width:100%;height:auto}
+.fd-legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;font-size:12px;color:var(--sub);padding:2px 0 4px}
+.fd-legend span{display:inline-flex;align-items:center;gap:5px}.fd-legend i{width:11px;height:11px;border-radius:3px}
+.fd-last{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 6px}
+.fd-last .l{font-size:13px;color:var(--sub)}.fd-last .l b{display:block;font-size:20px;color:var(--ink);font-family:'Gowun Dodum',sans-serif}
+.fd-go{border:0;background:var(--accent);color:#fff;font-weight:700;border-radius:14px;padding:13px 18px;flex:none}
+.fd-h{font-family:'Gowun Dodum',sans-serif;font-size:18px;margin:20px 0 6px}
+.fd-row{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
+.fd-row:last-child{border-bottom:0}
+.fd-row .dot{width:12px;height:12px;border-radius:50%;justify-self:center}
+.fd-row .nm{min-width:0}.fd-row .nm b{font-weight:700}.fd-row .nm small{display:block;color:var(--sub);font-size:12px}
+.fd-row .tm{font-variant-numeric:tabular-nums;text-align:right;font-weight:700}.fd-row .tm small{display:block;font-weight:400;color:var(--sub);font-size:12px}
+.fd-row.done .nm b::after{content:"✓ 오늘";margin-left:6px;font-size:11px;color:#4FA77A;font-weight:700}
+.fd-row.next{background:rgba(224,122,95,.09);border-radius:10px}
+.fd-log{background:var(--card);border-radius:14px;padding:4px 12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.fd-log .fd-row{grid-template-columns:56px 1fr auto;cursor:pointer}
+.fd-note{color:var(--sub);font-size:12.5px;line-height:1.6;margin-top:12px}
 .month-h{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
 .month-h b{font-family:'Gowun Dodum',sans-serif;font-size:19px}
 .month-h span{color:var(--sub);font-size:12px}
@@ -176,6 +195,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
     <button data-view="timeline" class="on">📈 타임라인</button>
     <button data-view="calendar">🗓️ 달력</button>
     <button data-view="album">📷 앨범</button>
+    <button data-view="feed">🍼 수유</button>
   </div>
 </div>
 <main class="wrap" id="view"></main>
@@ -642,6 +662,86 @@ function renderAlbum(){
 }
 
 /* =========================================================
+   9-2. 화면: 수유 시계
+   기본 시간표에서 시작해서, 수유 기록이 쌓이면 칸마다 최근 기록 5번의
+   중앙값 시각으로 옮겨감. 기록이 없으면 그대로 유지.
+   ========================================================= */
+const FEED_PLAN=[ // 분 단위 (0 = 자정), len = 칸 길이
+  {id:'dawn', name:'새벽수유', s:5*60,      len:60, night:true},
+  {id:'f0',   name:'첫수',    s:8*60,      len:90},
+  {id:'f1',   name:'수유1',   s:11*60,     len:90},
+  {id:'f2',   name:'수유2',   s:15*60+30,  len:90},
+  {id:'f3',   name:'수유3',   s:19*60,     len:60},
+  {id:'last', name:'막수',    s:23*60,     len:90, night:true},
+];
+const BATH={name:'목욕',s:18*60+30,len:30};
+const MATCH_WIN=120, LEARN_N=5;
+const toMin=t=>{const m=/^(\d{1,2}):(\d{2})/.exec(t||'');return m?(+m[1])*60+(+m[2]):null;};
+const cdiff=(a,b)=>{let d=((a-b)%1440+1440)%1440;return d>720?d-1440:d;}; // a-b, -720~720
+const fmtAP=m=>{m=((Math.round(m)%1440)+1440)%1440;const h=Math.floor(m/60),mm=m%60;return `${h<12?'오전':'오후'} ${h%12||12}:${pad(mm)}`;};
+const fmtDur=m=>{m=Math.round(m);const h=Math.floor(m/60),mm=m%60;return h?`${h}시간${mm?` ${mm}분`:''}`:`${mm}분`;};
+function feedLogs(){return S.entries.filter(e=>e.type==='feed'&&toMin(e.data?.time)!=null).map(e=>({e,m:toMin(e.data.time),key:e.date+' '+e.data.time})).sort((a,b)=>b.key.localeCompare(a.key));}
+function nearestSlot(plan,m){let best=null,bd=1e9;plan.forEach(p=>{const d=Math.abs(cdiff(m,p.s));if(d<bd){bd=d;best=p;}});return bd<=MATCH_WIN?best:null;}
+function learnedPlan(){
+  const logs=feedLogs();let plan=FEED_PLAN.map(p=>({...p,n:0}));
+  for(let round=0;round<2;round++){ // 한 번 옮긴 뒤 다시 짝지어서 안정화
+    const bucket={};logs.forEach(l=>{const p=nearestSlot(plan,l.m);if(p)(bucket[p.id]=bucket[p.id]||[]).push(l);});
+    plan=plan.map(p=>{const base=FEED_PLAN.find(x=>x.id===p.id);const ls=(bucket[p.id]||[]).slice(0,LEARN_N);
+      if(!ls.length)return {...p,n:0};
+      const ds=ls.map(l=>cdiff(l.m,base.s)).sort((a,b)=>a-b);const med=ds.length%2?ds[(ds.length-1)/2]:(ds[ds.length/2-1]+ds[ds.length/2])/2;
+      return {...p,s:((Math.round((base.s+med)/5)*5)%1440+1440)%1440,n:ls.length};});
+  }
+  return plan.sort((a,b)=>a.s-b.s);
+}
+function renderFeed(){
+  const plan=learnedPlan(),logs=feedLogs();
+  const now=new Date(),nm=now.getHours()*60+now.getMinutes(),today=todayStr(),yest=addDays(today,-1);
+  // 오늘 이미 한 칸: 오늘 기록(새벽 0~4시 막수는 어제 날짜 기록도 포함)
+  const doneIds=new Set();logs.filter(l=>l.e.date===today).forEach(l=>{const p=nearestSlot(plan,l.m);if(p&&l.m<=nm+30)doneIds.add(p.id);});
+  const inSlot=p=>{const d=cdiff(nm,p.s);return d>=0&&d<p.len;};
+  const cur=plan.find(inSlot);
+  const upcoming=plan.map(p=>({p,w:((p.s-nm)%1440+1440)%1440})).filter(x=>!doneIds.has(x.p.id)||x.w>720).sort((a,b)=>a.w-b.w);
+  const next=cur&&!doneIds.has(cur.id)?{p:cur,w:0}:upcoming.find(x=>x.p!==cur)||upcoming[0];
+  const last=logs[0];
+  let lastTxt='아직 기록이 없어요';
+  if(last){const lt=new Date(last.e.date+'T'+last.e.data.time);const ago=(now-lt)/60000;lastTxt=ago>=0&&ago<2880?`${fmtDur(ago)} 전`:`${last.e.date} ${last.e.data.time}`;}
+
+  // 시계
+  const RO=172,RI=108,RL=194,A=m=>(m/1440)*2*Math.PI-Math.PI/2,P=(r,m)=>[(r*Math.cos(A(m))).toFixed(1),(r*Math.sin(A(m))).toFixed(1)];
+  const arc=(s,len)=>{const e=s+len,b=len>720?1:0,[a1,a2]=P(RO,s),[b1,b2]=P(RO,e),[c1,c2]=P(RI,e),[d1,d2]=P(RI,s);return `M${a1} ${a2}A${RO} ${RO} 0 ${b} 1 ${b1} ${b2}L${c1} ${c2}A${RI} ${RI} 0 ${b} 0 ${d1} ${d2}Z`;};
+  let g=`<circle r="${(RO+RI)/2}" fill="none" stroke="var(--soft)" stroke-width="${RO-RI}"/>`;
+  for(let i=0;i<48;i++){const mj=i%2===0,[x1,y1]=P(RO+2,i*30),[x2,y2]=P(RO+(mj?9:5),i*30);g+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--sub)" stroke-width="${mj?1.3:.7}" opacity="${mj?.7:.45}"/>`;}
+  for(let h=0;h<24;h++){const[x,y]=P(RL,h*60),bg=h%6===0;g+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${bg?14:11}" font-weight="${bg?700:400}" fill="${bg?'var(--ink)':'var(--sub)'}">${h}</text>`;}
+  const seg=(s,len,fill,ink,label,dim)=>{const[x,y]=P((RO+RI)/2,s+len/2);g+=`<path d="${arc(s,len)}" fill="${fill}" stroke="var(--card)" stroke-width="2" opacity="${dim?.45:1}"/><text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${len<60?10.5:12.5}" font-weight="700" fill="${ink}">${label}</text>`;};
+  plan.forEach(p=>seg(p.s,p.len,p.night?'#B98AA8':'#E89A6E',p.night?'#5E3552':'#7A3E1C',p.name,doneIds.has(p.id)));
+  seg(BATH.s,BATH.len,'#6FA8C9','#1F4E69',BATH.name,false);
+  logs.filter(l=>l.e.date===today||(l.e.date===yest&&l.m>nm)).forEach(l=>{const[x,y]=P(RI-9,l.m);g+=`<circle cx="${x}" cy="${y}" r="4" fill="#4FA77A"/>`;});
+  g+=`<circle r="${RI-15}" fill="var(--card)"/>`;
+  const[hx,hy]=P(RO+6,nm),[ix,iy]=P(RI-20,nm);
+  g+=`<line x1="${ix}" y1="${iy}" x2="${hx}" y2="${hy}" stroke="#C2453A" stroke-width="3" stroke-linecap="round"/><circle cx="${ix}" cy="${iy}" r="4.5" fill="#C2453A"/>`;
+  if(next){
+    g+=`<text y="-14" text-anchor="middle" font-size="12" fill="var(--sub)">${next.w===0?'지금은':'다음은'}</text>`;
+    g+=`<text y="14" text-anchor="middle" font-size="24" fill="var(--ink)" font-family="Gowun Dodum,sans-serif">${next.p.name}</text>`;
+    g+=`<text y="38" text-anchor="middle" font-size="12.5" font-weight="700" fill="#C2453A">${next.w===0?'수유할 시간이에요':fmtDur(next.w)+' 뒤'}</text>`;
+  }
+  view.innerHTML=`
+    <div class="fd-last"><div class="l">마지막 수유<b>${lastTxt}</b></div><button class="fd-go" id="fdGo">🍼 지금 수유 기록</button></div>
+    <div class="fd-clock"><svg viewBox="-222 -222 444 444" role="img" aria-label="24시간 수유 시계">${g}</svg>
+      <div class="fd-legend"><span><i style="background:#E89A6E"></i>낮 수유</span><span><i style="background:#B98AA8"></i>밤 수유</span><span><i style="background:#6FA8C9"></i>목욕</span><span><i style="background:#4FA77A;border-radius:50%"></i>오늘 기록</span></div></div>
+    <div class="fd-h">시간표</div>
+    <div class="fd-log">${[...plan,{...BATH,bath:true,id:'bath'}].sort((a,b)=>a.s-b.s).map(p=>{
+      const base=FEED_PLAN.find(x=>x.id===p.id);const moved=base&&base.s!==p.s;
+      const sub=p.bath?'고정':p.n?`최근 기록 ${p.n}번 반영${moved?` · 원래 ${fmtAP(base.s)}`:''}`:'기본 시간표';
+      return `<div class="fd-row${doneIds.has(p.id)?' done':''}${next&&next.p.id===p.id?' next':''}" style="grid-template-columns:22px 1fr auto;cursor:default"><span class="dot" style="background:${p.bath?'#6FA8C9':p.night?'#B98AA8':'#E89A6E'}"></span><span class="nm"><b>${p.name}</b><small>${sub}</small></span><span class="tm">${fmtAP(p.s)}<small>~ ${fmtAP(p.s+p.len)}</small></span></div>`;}).join('')}</div>
+    <div class="fd-h">오늘 수유 기록</div>
+    ${(()=>{const t=logs.filter(l=>l.e.date===today).sort((a,b)=>a.m-b.m);return t.length?`<div class="fd-log">${t.map(l=>{const p=nearestSlot(plan,l.m);const d=l.e.data;return `<div class="fd-row" data-id="${l.e.id}"><span class="tm" style="text-align:left">${d.time}</span><span class="nm"><b>${esc(d.kind||'수유')}</b><small>${p?p.name:'시간표 밖'}</small></span><span class="tm" style="font-weight:400;color:var(--sub)">${[d.amount?d.amount+'ml':'',d.minutes?d.minutes+'분':''].filter(Boolean).join(' · ')}</span></div>`;}).join('')}</div>`:'<div class="fd-note">오늘은 아직 기록이 없어요. 수유할 때 위 버튼을 눌러 주세요.</div>';})()}
+    <div class="fd-note">수유를 기록하면 가장 가까운 칸(앞뒤 2시간 안)에 짝지어져요. 칸마다 최근 기록 ${LEARN_N}번의 가운데 시각으로 시간표가 조금씩 옮겨가고, 기록이 없는 칸은 그대로 있어요. 목욕은 고정이에요.</div>`;
+  document.getElementById('fdGo').onclick=()=>openEditor(null,{date:todayStr(),type:'feed'});
+  view.querySelectorAll('.fd-row[data-id]').forEach(el=>el.onclick=()=>openEditor(S.entries.find(e=>e.id===el.dataset.id)));
+}
+setInterval(()=>{if(S.view==='feed'&&!sheetBg.classList.contains('on')&&!document.hidden)render();},60000);
+
+/* =========================================================
    10. 기록 작성 / 수정
    ========================================================= */
 let draft=null;
@@ -826,10 +926,10 @@ function render(){
   document.getElementById('babyName').textContent=S.settings.babyName;
   document.getElementById('babyAge').textContent=ageLabel(birth(),todayStr());
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.view===S.view));
-  ({timeline:renderTimeline,calendar:renderCalendar,album:renderAlbum})[S.view]();
+  ({timeline:renderTimeline,calendar:renderCalendar,album:renderAlbum,feed:renderFeed})[S.view]();
 }
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{S.view=b.dataset.view;if(S.view==='timeline')S._scrolled=false;window.scrollTo(0,0);render();});
-document.getElementById('fab').onclick=()=>openEditor(null,{date:todayStr(),type:S.view==='timeline'?'milestone':'moment'});
+document.getElementById('fab').onclick=()=>openEditor(null,{date:todayStr(),type:S.view==='timeline'?'milestone':S.view==='feed'?'feed':'moment'});
 document.getElementById('btnSettings').onclick=openSettings;
 
 (async function start(){
